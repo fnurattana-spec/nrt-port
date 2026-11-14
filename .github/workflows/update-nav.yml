@@ -1,0 +1,39 @@
+name: อัปเดต NAV
+
+on:
+  schedule:
+    # ทุกวันจันทร์–ศุกร์ 21:17 น. เวลาไทย (14:17 UTC) และ 08:17 น. (01:17 UTC) เผื่อ NAV ออกช้า
+    - cron: "17 14 * * 1-5"
+    - cron: "17 1 * * 2-6"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-nav
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: ดึง NAV
+        env:
+          SEC_API_KEY: ${{ secrets.SEC_API_KEY }}
+          SEC_API_KEY_2: ${{ secrets.SEC_API_KEY_2 }}
+        run: python3 scripts/fetch_nav.py
+      - name: Commit nav.json
+        run: |
+          if git diff --quiet -- nav.json && git ls-files --error-unmatch nav.json >/dev/null 2>&1; then
+            echo "NAV ไม่เปลี่ยน"; exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add nav.json
+          git commit -m "อัปเดต NAV $(date -u +%Y-%m-%d)"
+          git push

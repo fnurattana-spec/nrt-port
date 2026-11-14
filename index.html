@@ -139,6 +139,9 @@
     border: 1px solid var(--line); background: var(--card); color: var(--text);
   }
   button:hover { border-color: var(--muted); }
+  .status { font-size: .8rem; margin-top: 6px !important; }
+  .nav-hint { display: flex; justify-content: space-between; gap: 8px; font-size: .75rem; color: var(--muted); margin-top: 4px; min-height: 1.2em; }
+  .nav-hint button { min-height: 0; padding: 0; border: 0; background: none; color: var(--brand); font-size: .75rem; text-decoration: underline; }
   .note { font-size: .8rem; color: var(--muted); margin: 16px 2px 24px; }
 </style>
 </head>
@@ -146,7 +149,8 @@
 <div class="wrap">
   <header>
     <h1>พอร์ตกองทุนของฉัน</h1>
-    <p>กรอกจำนวนหน่วย ต้นทุน และ NAV ล่าสุด ระบบคำนวณให้ทันที</p>
+    <p>กรอกจำนวนหน่วยและต้นทุน ระบบดึง NAV ล่าสุดและคำนวณให้ทันที</p>
+    <p class="status" id="navStatus">กำลังโหลด NAV…</p>
   </header>
 
   <section class="summary" aria-live="polite">
@@ -177,7 +181,7 @@
   </div>
   <p class="note">
     ข้อมูลบันทึกไว้ในเบราว์เซอร์เครื่องนี้เท่านั้น · “ต้นทุน” คือเงินลงทุนรวมเป็นบาท ·
-    NAV ดูได้จากเว็บไซต์ บลจ. หรือ <a href="https://www.thaimutualfund.com/" target="_blank" rel="noopener" style="color:var(--brand)">thaimutualfund.com</a>
+    NAV ดึงจาก SEC Open API (ก.ล.ต.) ทุกวันทำการ ตรวจสอบเพิ่มเติมได้ที่ <a href="https://www.thaimutualfund.com/" target="_blank" rel="noopener" style="color:var(--brand)">thaimutualfund.com</a>
   </p>
 </div>
 
@@ -213,7 +217,8 @@
       <div class="fields">
         <div><label>จำนวนหน่วย</label><input inputmode="decimal" data-k="units" placeholder="0.0000"></div>
         <div><label>ต้นทุนรวม (บาท)</label><input inputmode="decimal" data-k="cost" placeholder="0.00"></div>
-        <div class="f-nav"><label>NAV ล่าสุด (บาท/หน่วย)</label><input inputmode="decimal" data-k="nav" placeholder="0.0000"></div>
+        <div class="f-nav"><label>NAV ล่าสุด (บาท/หน่วย)</label><input inputmode="decimal" data-k="nav" placeholder="0.0000">
+          <div class="nav-hint"><span data-k="navinfo"></span><button type="button" data-k="navauto" hidden>ใช้ NAV อัตโนมัติ</button></div></div>
       </div>
       <div class="fund-foot">
         <div>ต้นทุนเฉลี่ย/หน่วย<b data-k="avg">—</b></div>
@@ -224,11 +229,66 @@
       const k = inp.dataset.k;
       inp.value = s[k] || "";
       inp.setAttribute("aria-label", `${f.code} ${inp.previousElementSibling.textContent}`);
-      inp.addEventListener("input", () => { s[k] = inp.value; save(); render(); });
+      inp.addEventListener("input", () => {
+        s[k] = inp.value;
+        if (k === "nav") s.navManual = true;
+        save(); applyNav(); render();
+      });
+    });
+    el.querySelector('[data-k="navauto"]').addEventListener("click", () => {
+      s.navManual = false; save(); applyNav(); render();
     });
     f.el = el;
     container.appendChild(el);
   });
+
+  // ---- NAV อัตโนมัติจาก nav.json (อัปเดตโดย GitHub Actions) ----
+  let navData = null;
+  const thDate = d => {
+    const x = new Date(d);
+    return isNaN(x) ? d : x.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" });
+  };
+
+  function applyNav() {
+    FUNDS.forEach(f => {
+      const s = state[f.code];
+      const auto = navData && navData.funds && navData.funds[f.code];
+      const has = auto && typeof auto.nav === "number";
+      const inp = f.el.querySelector('[data-k="nav"]');
+      const info = f.el.querySelector('[data-k="navinfo"]');
+      const btn = f.el.querySelector('[data-k="navauto"]');
+      if (has && !s.navManual) {
+        s.nav = String(auto.nav);
+        if (document.activeElement !== inp) inp.value = s.nav;
+        info.textContent = "อัตโนมัติ · ณ " + thDate(auto.date);
+        btn.hidden = true;
+      } else if (has) {
+        info.textContent = "กรอกเอง (ล่าสุด " + fmt(auto.nav, 4) + ")";
+        btn.hidden = false;
+      } else {
+        info.textContent = navData ? "ไม่พบ NAV อัตโนมัติ กรุณากรอกเอง" : "";
+        btn.hidden = true;
+      }
+    });
+    save();
+  }
+
+  async function loadNav() {
+    const status = document.getElementById("navStatus");
+    try {
+      const r = await fetch("nav.json?t=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      navData = await r.json();
+      const upd = navData.updated ? new Date(navData.updated) : null;
+      status.textContent = "NAV อัปเดตอัตโนมัติ" + (upd && !isNaN(upd)
+        ? " · " + upd.toLocaleString("th-TH", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" }) + " น."
+        : "");
+    } catch (e) {
+      navData = null;
+      status.textContent = "ยังโหลด NAV อัตโนมัติไม่ได้ กรอก NAV เองได้";
+    }
+    applyNav(); render();
+  }
 
   function setPL(node, pl) {
     node.classList.toggle("gain-t", pl > 0);
@@ -288,13 +348,14 @@
   document.getElementById("resetBtn").addEventListener("click", () => {
     if (!confirm("ล้างข้อมูลทุกกองทุน?")) return;
     FUNDS.forEach(f => {
-      state[f.code] = { units: "", cost: "", nav: "" };
+      state[f.code] = { units: "", cost: "", nav: "", navManual: false };
       f.el.querySelectorAll("input").forEach(i => i.value = "");
     });
-    save(); render();
+    applyNav(); render();
   });
 
   render();
+  loadNav();
 </script>
 </body>
 </html>
