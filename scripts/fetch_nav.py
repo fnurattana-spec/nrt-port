@@ -9,6 +9,7 @@
 ใช้:  python3 scripts/fetch_nav.py
 """
 import datetime as dt
+import difflib
 import json
 import os
 import sys
@@ -80,6 +81,9 @@ def iso_date(v):
 
 # ---------------------------------------------------------------- Finnomena
 FN = "https://www.finnomena.com/fn3/api/fund"
+# ชื่อย่อในพอร์ต → ชื่อย่อที่ Finnomena ใช้ (ใส่เฉพาะกองที่ชื่อไม่ตรงกัน)
+FN_ALIASES = {
+}
 FN_LISTS = [
     FN + "/public/list",
     FN + "/v2/public/funds",
@@ -89,7 +93,8 @@ FN_LISTS = [
 
 def fn_resolve(want):
     """หา id ของกองทุนใน Finnomena จากชื่อย่อ (short_code)"""
-    found = {}
+    want = {norm(FN_ALIASES.get(orig, orig)): orig for orig in want.values()}
+    found, all_codes = {}, set()
     for url in FN_LISTS:
         try:
             rows = list_in(http_json(url), "data", "funds", "items", "result")
@@ -101,6 +106,8 @@ def fn_resolve(want):
                 continue
             code = norm(it.get("short_code") or it.get("shortCode") or it.get("code") or it.get("fund_code"))
             fid = it.get("id") or it.get("fund_id") or it.get("fundId")
+            if code:
+                all_codes.add(code)
             if code in want and fid and want[code] not in found:
                 found[want[code]] = {
                     "fn_id": str(fid),
@@ -109,7 +116,24 @@ def fn_resolve(want):
                 }
         if len(found) == len(want):
             break
+    for code, orig in want.items():
+        if orig not in found and all_codes:
+            log(f"[finnomena] {orig}: ชื่อที่ใกล้เคียง → {', '.join(suggest(code, all_codes)) or '-'}")
     return found
+
+
+def suggest(code, codes, n=12):
+    """ชื่อกองที่หน้าตาคล้าย code เพื่อช่วยหาชื่อย่อที่ถูกต้อง"""
+    core = code.replace("RMF", "").replace("SSF", "").strip("-")
+    parts = [p for p in core.replace("-", " ").split() if len(p) >= 3]
+    hits = [c for c in codes if any(p in c for p in parts) or core in c]
+    hits = sorted(hits, key=lambda c: (-difflib.SequenceMatcher(None, code, c).ratio(), c))
+    close = difflib.get_close_matches(code, list(codes), n=n, cutoff=0.5)
+    out = []
+    for c in close + hits:
+        if c not in out:
+            out.append(c)
+    return out[:n]
 
 
 def fn_latest(info):
