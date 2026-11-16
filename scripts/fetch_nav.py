@@ -83,6 +83,12 @@ def iso_date(v):
 FN = "https://www.finnomena.com/fn3/api/fund"
 # ชื่อย่อในพอร์ต → ชื่อย่อที่ Finnomena ใช้ (ใส่เฉพาะกองที่ชื่อไม่ตรงกัน)
 FN_ALIASES = {
+    "EU-US500RMF": "ES-US500RMF",
+}
+# คำค้นในชื่อกอง (ไทย/อังกฤษ) ไว้ช่วยหาในล็อกเมื่อชื่อย่อไม่ตรง
+FN_NAME_HINTS = {
+    "TSP3": ["SMART PORT 3", "SMARTPORT 3", "สมาร์ท พอร์ต 3", "สมาร์ทพอร์ต 3", "BALANCER"],
+    "TSP5": ["SMART PORT 5", "SMARTPORT 5", "สมาร์ท พอร์ต 5", "สมาร์ทพอร์ต 5", "GO-GETTER", "GOGETTER"],
 }
 FN_LISTS = [
     FN + "/public/list",
@@ -94,7 +100,7 @@ FN_LISTS = [
 def fn_resolve(want):
     """หา id ของกองทุนใน Finnomena จากชื่อย่อ (short_code)"""
     want = {norm(FN_ALIASES.get(orig, orig)): orig for orig in want.values()}
-    found, all_codes = {}, set()
+    found, all_codes, named = {}, set(), []
     for url in FN_LISTS:
         try:
             rows = list_in(http_json(url), "data", "funds", "items", "result")
@@ -108,6 +114,7 @@ def fn_resolve(want):
             fid = it.get("id") or it.get("fund_id") or it.get("fundId")
             if code:
                 all_codes.add(code)
+                named.append((code, str(fid), f"{it.get('name_th') or ''} {it.get('name_en') or ''}".strip()))
             if code in want and fid and want[code] not in found:
                 found[want[code]] = {
                     "fn_id": str(fid),
@@ -117,6 +124,11 @@ def fn_resolve(want):
         if len(found) == len(want):
             break
     for code, orig in want.items():
+        if orig not in found and orig in FN_NAME_HINTS:
+            hints = [h.upper() for h in FN_NAME_HINTS[orig]]
+            for c, i, n in named:
+                if any(h in n.upper() or h in c for h in hints):
+                    log(f"[finnomena] {orig}: ชื่อตรงคำค้น → {c} ({i}) {n}")
         if orig not in found and all_codes:
             log(f"[finnomena] {orig}: ชื่อที่ใกล้เคียง → {', '.join(suggest(code, all_codes)) or '-'}")
     return found
