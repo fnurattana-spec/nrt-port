@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffd6e7">
+<title>Where's my car?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff7fb;--card:#ffffff;--ink:#5b4b6b;--mute:#9a8aa8;--pink:#ffd6e7;--mint:#d3f5e6;--sky:#d4e8ff;--lav:#e6dcff;--peach:#ffe5d0;--lemon:#fff4c2;--line:#f0e3f5;--on:#b79bff}
+@media (prefers-color-scheme:dark){:root{--bg:#241d2e;--card:#322a40;--ink:#f1e8fa;--mute:#b3a3c6;--pink:#6b4560;--mint:#35604f;--sky:#3a5578;--lav:#54447d;--peach:#76543e;--lemon:#6d6130;--line:#463b58;--on:#9a7bff}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Mali','Sarabun',system-ui,sans-serif;line-height:1.5;font-size:14px;padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:520px;margin:0 auto;padding:16px 16px 40px}
+header{text-align:center;padding:8px 0 4px}
+h1{font-size:24px;margin:4px 0 0}
+.sub{color:var(--mute);font-size:13px;margin:2px 0 0}
+.car{width:120px;height:70px;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+@media (prefers-reduced-motion:reduce){.car{animation:none}}
+.today{background:var(--lemon);border-radius:22px;padding:14px 16px;margin:12px 0;display:flex;gap:12px;align-items:center}
+.today .big{font-size:34px}
+.today b{font-size:20px}
+.card{background:var(--card);border-radius:24px;padding:16px;margin:12px 0;box-shadow:0 6px 18px rgba(183,155,255,.16)}
+.card h2{font-size:16px;margin:0 0 10px}
+input,button{font:inherit;color:inherit}
+input[type=date],input[type=text]{width:100%;padding:10px 12px;border:2px solid var(--line);border-radius:14px;background:var(--bg);font-size:16px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.tab{border:2px solid transparent;border-radius:18px;padding:10px 4px;background:var(--pink);cursor:pointer;font-weight:600;font-size:14px}
+.tab:nth-child(2){background:var(--sky)}.tab:nth-child(3){background:var(--mint)}
+.tab span{display:block;font-size:24px}
+.tab[aria-pressed=true]{border-color:var(--on);transform:scale(1.03)}
+.row{display:flex;align-items:center;gap:6px;margin:6px 0;flex-wrap:wrap}
+.fl{width:52px;font-size:13px;color:var(--mute)}
+.chip{border:2px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 14px;cursor:pointer;font-weight:600;min-height:38px}
+.chip[aria-pressed=true]{background:var(--on);border-color:var(--on);color:#fff}
+.chip:focus-visible,.tab:focus-visible,.btn:focus-visible{outline:3px solid var(--on);outline-offset:2px}
+.grid{display:flex;flex-wrap:wrap;gap:8px}
+.btn{width:100%;border:0;border-radius:20px;padding:14px;background:var(--on);color:#fff;font-weight:700;font-size:17px;cursor:pointer;margin-top:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.pick{margin-top:10px;text-align:center;color:var(--mute);font-size:14px}
+.stat{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:14px}
+.bar{height:12px;border-radius:99px;background:var(--lav);min-width:12px}
+.item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:2px dashed var(--line)}
+.item:first-of-type{border-top:0}
+.ico{font-size:26px;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;flex:none}
+.item .t{flex:1;min-width:0}
+.item small{color:var(--mute);display:block}
+.x{border:0;background:none;font-size:18px;cursor:pointer;opacity:.6;padding:8px}
+.empty{text-align:center;color:var(--mute);padding:14px 0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<svg class="car" viewBox="0 0 120 70" aria-hidden="true">
+<ellipse cx="60" cy="64" rx="42" ry="4" fill="#b79bff" opacity=".18"/>
+<path d="M14 46c0-8 4-12 10-14l9-14c2-3 5-4 8-4h30c4 0 7 2 9 5l9 13c8 1 13 5 13 14v4c0 3-2 5-5 5H19c-3 0-5-2-5-5z" fill="#ffc2dc"/>
+<path d="M38 20h22v13H30zM64 20h12l9 13H64z" fill="#d4e8ff"/>
+<circle cx="35" cy="56" r="9" fill="#5b4b6b"/><circle cx="35" cy="56" r="4" fill="#fff7fb"/>
+<circle cx="88" cy="56" r="9" fill="#5b4b6b"/><circle cx="88" cy="56" r="4" fill="#fff7fb"/>
+<circle cx="50" cy="42" r="2" fill="#5b4b6b"/><circle cx="70" cy="42" r="2" fill="#5b4b6b"/>
+<path d="M56 46q4 4 8 0" stroke="#5b4b6b" stroke-width="2" fill="none" stroke-linecap="round"/>
+<circle cx="44" cy="46" r="3" fill="#ff9ec4" opacity=".6"/><circle cx="76" cy="46" r="3" fill="#ff9ec4" opacity=".6"/>
+</svg>
+<h1>Where's my car? 🅿️</h1>
+<p class="sub">📱 เก็บในเบราว์เซอร์เครื่องนี้ (ไม่ซิงก์ข้ามเครื่อง)</p>
+</header>
+
+<div class="today" id="today"></div>
+
+<section class="card">
+<h2>📅 วันที่</h2>
+<input type="date" id="date" aria-label="วันที่">
+<div class="tabs" role="group" aria-label="สถานที่">
+<button class="tab" data-loc="home" aria-pressed="true"><span>🏠</span>บ้าน</button>
+<button class="tab" data-loc="work" aria-pressed="false"><span>🏢</span>ที่ทำงาน</button>
+<button class="tab" data-loc="other" aria-pressed="false"><span>✨</span>อื่นๆ</button>
+</div>
+</section>
+
+<section class="card">
+<h2 id="ph">🅿️ เลือกชั้น</h2>
+<div id="spots"></div>
+<div class="pick" id="pick"></div>
+<button class="btn" id="save" disabled>💾 บันทึกเลย</button>
+</section>
+
+<section class="card">
+<h2>🌸 จอดบ่อยที่สุด</h2>
+<div id="stats"></div>
+</section>
+
+<section class="card">
+<h2>📒 ประวัติ</h2>
+<div id="list"></div>
+</section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const KEY='parklog-v1';
+const LOC={home:{n:'บ้าน',i:'🏠',c:'var(--pink)'},work:{n:'ที่ทำงาน',i:'🏢',c:'var(--sky)'},other:{n:'อื่นๆ',i:'✨',c:'var(--mint)'}};
+let data={};try{data=JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){}
+let loc='home',spot=null;
+const $=id=>document.getElementById(id);
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch(e){return false}};
+
+const ymd=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const fmt=s=>new Date(s+'T00:00:00').toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short',year:'2-digit'});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+$('date').value=ymd(new Date());
+
+function label(e){return e.loc==='other'?e.place+(e.spot?' · '+e.spot:''):e.spot}
+
+let other={place:'',spot:''};
+function renderSpots(){
+  const box=$('spots');let h='';
+  if(loc==='home'){
+    for(let f=2;f<=8;f++){
+      h+=`<div class="row"><span class="fl">ชั้น ${f}</span>`+[f,f+'up',f+'down'].map(v=>`<button class="chip" data-s="${v}" aria-pressed="${spot===String(v)}">${v}</button>`).join('')+'</div>';
+    }
+  }else if(loc==='work'){
+    const L=['2B'];for(let f=3;f<=8;f++){L.push(f+'A');if(f<8)L.push(f+'B')}
+    h='<div class="grid">'+L.map(v=>`<button class="chip" data-s="${v}" aria-pressed="${spot===v}">${v}</button>`).join('')+'</div>';
+  }else{
+    h=`<input type="text" id="place" placeholder="🗺️ ที่ไหน? เช่น เซ็นทรัล, สนามบิน" maxlength="40" value="${esc(other.place)}"><div style="height:8px"></div><input type="text" id="fl" placeholder="🔢 ชั้น/โซน เช่น B2, โซนสีเขียว" maxlength="30" value="${esc(other.spot)}">`;
+  }
+  box.innerHTML=h;
+  if(loc==='other'){$('place').oninput=e=>{other.place=e.target.value;update()};$('fl').oninput=e=>{other.spot=e.target.value;update()}}
+  else box.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{spot=b.dataset.s;renderSpots();update()});
+  $('ph').textContent=loc==='home'?'🏠 บ้านจอดชั้นไหน?':loc==='work'?'🏢 ที่ทำงานจอดชั้นไหน?':'✨ จอดที่ไหน?';
+}
+function update(){
+  const ok=loc==='other'?other.place.trim():spot;
+  $('save').disabled=!ok;
+  $('pick').textContent=ok?'🚗 '+(loc==='other'?other.place+(other.spot?' · '+other.spot:''):LOC[loc].n+' · ชั้น '+spot):'แตะเลือกชั้นที่จอดได้เลย';
+}
+
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  loc=t.dataset.loc;spot=null;
+  document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-pressed',x===t));
+  renderSpots();update();
+});
+
+$('save').onclick=()=>{
+  const d=$('date').value;if(!d)return;
+  const n=new Date(),t=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  data[d]=loc==='other'?{loc,place:other.place.trim(),spot:other.spot.trim(),t}:{loc,spot,t};
+  renderAll();
+  toast(persist()?'บันทึกแล้ว 🎉':'บันทึกไม่ได้ (เบราว์เซอร์ปิดการเก็บข้อมูล)');
+};
+function del(d){delete data[d];renderAll();persist()}
+
+function renderAll(){
+  const t=ymd(new Date()),e=data[t];
+  $('today').style.background=e?'var(--lemon)':'var(--lav)';
+  $('today').innerHTML=e?`<span class="big">${LOC[e.loc].i}</span><div>วันนี้จอดที่<br><b>${esc(label(e))}</b>${e.t?`<br><small style="color:var(--mute)">🕒 บันทึกเมื่อ ${e.t} น.</small>`:''}</div>`:`<span class="big">🐣</span><div>วันนี้ยังไม่ได้จด<br><b>จอดชั้นไหนอยู่น้า?</b></div>`;
+  const ds=Object.keys(data).sort().reverse();
+  $('list').innerHTML=ds.length?ds.map(d=>{const v=data[d];return `<div class="item"><div class="ico" style="background:${LOC[v.loc].c}">${LOC[v.loc].i}</div><div class="t"><b>${esc(label(v))}</b><small>${fmt(d)}${v.t?' · 🕒 '+v.t+' น.':''}</small></div><button class="x" aria-label="ลบ" data-d="${d}">🗑️</button></div>`}).join(''):'<div class="empty">🌱 ยังไม่มีข้อมูล เริ่มจดวันแรกกันเลย</div>';
+  $('list').querySelectorAll('.x').forEach(b=>b.onclick=()=>del(b.dataset.d));
+  const c={};ds.forEach(d=>{const v=data[d],k=v.loc+'|'+label(v);c[k]=(c[k]||0)+1});
+  const top=Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,5),mx=top.length?top[0][1]:1;
+  $('stats').innerHTML=top.length?top.map(([k,n])=>{const i=k.indexOf('|'),l=k.slice(0,i),s=k.slice(i+1);return `<div class="stat"><span>${LOC[l].i}</span><span style="width:110px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s)}</span><div class="bar" style="width:${n/mx*100}px;background:${LOC[l].c}"></div><span>${n} วัน</span></div>`}).join(''):'<div class="empty">🍬 จดสักวันก่อนนะ แล้วจะเห็นสถิติตรงนี้</div>';
+}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600)}
+renderSpots();update();renderAll();
+</script>
+</body>
+</html>
