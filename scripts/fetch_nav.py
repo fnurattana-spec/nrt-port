@@ -84,6 +84,8 @@ FN = "https://www.finnomena.com/fn3/api/fund"
 # ชื่อย่อในพอร์ต → ชื่อย่อที่ Finnomena ใช้ (ใส่เฉพาะกองที่ชื่อไม่ตรงกัน)
 FN_ALIASES = {
     "EU-US500RMF": "ES-US500RMF",
+    "TSP3": "TSP3-BALANCER",   # ttb smart port 3 balancer (ไม่ใช่ตัว SSF: TSP3-BALANCER-SSF)
+    "TSP5": "TSP5-GOGETTER",   # ttb smart port 5 go-getter (ไม่ใช่ตัว SSF: TSP5-GOGETTER-SSF)
 }
 # คำค้นในชื่อกอง (ไทย/อังกฤษ) ไว้ช่วยหาในล็อกเมื่อชื่อย่อไม่ตรง
 FN_NAME_HINTS = {
