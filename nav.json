@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-16T09:58+07:00",
+  "updated": "2026-11-16T09:59+07:00",
   "funds": {
     "EU-US500RMF": {
       "fn_id": "F00000PHSE",
@@ -25,7 +25,21 @@
       "date": "2026-11-13",
       "source": "finnomena"
     },
-    "TSP3": {},
-    "TSP5": {}
+    "TSP3": {
+      "fn_id": "F000017NSP",
+      "name_th": "กองทุนเปิด ttb smart port 3 balancer",
+      "name_en": "",
+      "nav": 12.427,
+      "date": "2026-11-12",
+      "source": "finnomena"
+    },
+    "TSP5": {
+      "fn_id": "F000017NSR",
+      "name_th": "กองทุนเปิด ttb smart port 5 go-getter",
+      "name_en": "",
+      "nav": 12.353,
+      "date": "2026-11-12",
+      "source": "finnomena"
+    }
   }
 }
