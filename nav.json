@@ -1,44 +1,44 @@
 {
-  "updated": "2026-11-19T09:21+07:00",
+  "updated": "2026-11-19T22:03+07:00",
   "funds": {
     "EU-US500RMF": {
       "fn_id": "F00000PHSE",
       "name_th": "กองทุนเปิดอีสท์สปริง US500 เพื่อการเลี้ยงชีพ",
       "name_en": "",
-      "nav": 39.7928,
-      "date": "2026-11-17",
+      "nav": 39.683,
+      "date": "2026-11-18",
       "source": "finnomena"
     },
     "UGQGRMF": {
       "fn_id": "F000011OQW",
       "name_th": "กองทุนเปิด ยูไนเต็ด โกลบอล ควอลิตี้ โกรท ฟันด์ เพื่อการเลี้ยงชีพ",
       "name_en": "",
-      "nav": 13.0897,
-      "date": "2026-11-17",
+      "nav": 13.076,
+      "date": "2026-11-18",
       "source": "finnomena"
     },
     "UOBGRMF-H": {
       "fn_id": "F00000NIVL",
       "name_th": "กองทุนเปิด ยูโอบี โกลด์ เพื่อการเลี้ยงชีพ - H",
       "name_en": "",
-      "nav": 16.251,
-      "date": "2026-11-18",
+      "nav": 16.0851,
+      "date": "2026-11-19",
       "source": "finnomena"
     },
     "TSP3": {
       "fn_id": "F000017NSP",
       "name_th": "กองทุนเปิด ttb smart port 3 balancer",
       "name_en": "",
-      "nav": 12.2115,
-      "date": "2026-11-17",
+      "nav": 12.2019,
+      "date": "2026-11-18",
       "source": "finnomena"
     },
     "TSP5": {
       "fn_id": "F000017NSR",
       "name_th": "กองทุนเปิด ttb smart port 5 go-getter",
       "name_en": "",
-      "nav": 12.0531,
-      "date": "2026-11-17",
+      "nav": 12.0046,
+      "date": "2026-11-18",
       "source": "finnomena"
     }
   }
